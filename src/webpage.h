@@ -261,6 +261,7 @@ public slots:
     QObject* _getJsConfirmCallback();
     QObject* _getJsPromptCallback();
     QObject* _getJsInterruptCallback();
+    QObject *_getFileDownloadCallback();
     void _uploadFile(const QString& selector, const QStringList& fileNames);
     void sendEvent(const QString& type, const QVariant& arg1 = QVariant(), const QVariant& arg2 = QVariant(), const QString& mouseButton = QString(), const QVariant& modifierArg = QVariant());
 
@@ -499,6 +500,9 @@ signals:
     void rawPageCreated(QObject* page);
     void closing(QObject* page);
     void repaintRequested(const int x, const int y, const int width, const int height);
+    void fileDownloadRequested(const QUrl &url, const QVariantMap& responseData);
+    void fileDownloadFinished(const QString &fileName);
+    void fileDownloadError(const QString &error);
 
 private slots:
     void finish(bool ok);
@@ -507,6 +511,8 @@ private slots:
     void handleRepaintRequested(const QRect& dirtyRect);
     void handleUrlChanged(const QUrl& url);
     void handleCurrentFrameDestroyed();
+    void downloadRequested(QNetworkReply* networkReply);
+    void downloadFinished();
 
 private:
     QImage renderImage();
@@ -526,6 +532,8 @@ private:
     bool javaScriptConfirm(const QString& msg);
     bool javaScriptPrompt(const QString& msg, const QString& defaultValue, QString* result);
     void javascriptInterrupt();
+    QString fileDownloadPrompt(const QUrl& url, const QVariantMap& responseData);
+
 
 private:
     CustomPage* m_customWebPage;
@@ -544,6 +552,7 @@ private:
     int m_loadingProgress;
     bool m_shouldInterruptJs;
     CookieJar* m_cookieJar;
+    QMap<QNetworkReply*, QString> m_downloadingFiles;
 
     friend class Phantom;
     friend class CustomPage;
