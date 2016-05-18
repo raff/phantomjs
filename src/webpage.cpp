@@ -1858,22 +1858,29 @@ void WebPage::downloadFinished()
 {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
 
-    if (reply && reply->error() == QNetworkReply::NoError && m_downloadingFiles.contains(reply)) {
-        qDebug() << "WebPage - downloadFinished";
-        QFile file(m_downloadingFiles[reply]);
+    if (reply && m_downloadingFiles.contains(reply)) {
+	QString downloadFile = m_downloadingFiles[reply];
 
-        if (!file.open(QIODevice::WriteOnly)) {
-            emit fileDownloadError("Error opening output file: " + file.errorString());
-        } else {
-            qint64 bufferSize = qMin<qint64>(MIN_BUFFER_SIZE, reply->size());
-            QByteArray buffer;
-            while (!(buffer = reply->read(bufferSize)).isEmpty()) {
-                file.write(buffer);
+        if (reply->error() == QNetworkReply::NoError) {
+            QFile file(downloadFile);
+
+            if (!file.open(QIODevice::WriteOnly)) {
+                qDebug() << "WebPage - fileDownloadError can't write";
+                emit fileDownloadError("Error opening output file: " + file.errorString());
+            } else {
+                qint64 bufferSize = qMin<qint64>(MIN_BUFFER_SIZE, reply->size());
+                QByteArray buffer;
+                while (!(buffer = reply->read(bufferSize)).isEmpty()) {
+                    file.write(buffer);
+                }
+                file.close();
+
+                qDebug() << "WebPage - fileDownloadFinished" << file.fileName();
+                emit fileDownloadFinished(file.fileName());
             }
-            file.close();
-
-            qDebug() << "WebPage - fileDownloadFinished" << file.fileName();
-            emit fileDownloadFinished(file.fileName());
+        } else {
+            qDebug() << "WebPage - fileDownloadError" << reply->error();
+	    emit fileDownloadError("Error downloading " + downloadFile + ": " + reply->errorString());
         }
 
         m_downloadingFiles.remove(reply);
