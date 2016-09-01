@@ -267,6 +267,10 @@ function decorateNewPage(opts, page) {
 
     definePageSignalHandler(page, handlers, "onClosing", "closing");
 
+    definePageSignalHandler(page, handlers, "onFileDownloadError", "fileDownloadError");
+
+    definePageSignalHandler(page, handlers, "onFileDownloadFinished", "fileDownloadFinished");
+
     // Private callback for "page.open()"
     definePageSignalHandler(page, handlers, "_onPageOpenFinished", "loadFinished");
 
@@ -455,6 +459,9 @@ function decorateNewPage(opts, page) {
 
     // Calls from within the page when some javascript code running to long
     definePageCallbackHandler(page, handlers, "onLongRunningScript", "_getJsInterruptCallback");
+
+    // Calls arrive to this handler when the web page initiates file download
+    definePageCallbackHandler(page, handlers, "onFileDownload", "_getFileDownloadCallback");
 
     page.event = {};
     page.event.modifier = {
